@@ -1,0 +1,11 @@
+jupyter==1.0.0
+ipython==8.3.0
+scikit-learn==1.1.2
+numpy==1.23.3
+pandas==1.4.4
+xgboost==1.6.2
+hyperopt==0.2.7
+matplotlib
+scipy==1.9.3
+bentoml==1.0.6
+pydantic==1.10.2

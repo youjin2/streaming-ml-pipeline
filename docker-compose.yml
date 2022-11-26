@@ -1,0 +1,21 @@
+version: "3"
+services:
+  jupyter:
+    build:
+      context: ./docker/jupyter
+    image: ${JUPYTER_IMAGE_NAME}:${VERSION}
+    container_name: jupyter
+    ports:
+      - "${JUPYTER_PORT}:8888"
+      - "${BENTOML_SERVE_PORT}:3000"
+    environment:
+      BENTOML_HOME: ${BENTOML_HOME}
+    volumes:
+      - ./:/opt/project
+      - ./${BENTOML_HOME}:/${BENTOML_HOME}
+    stdin_open: true
+    tty: true
+    command: >
+      bash -c "
+      cd / && jupyter notebook --no-browser --allow-root --ip='*' --port=8888 --NotebookApp.password='' --NotebookApp.token=''
+      "
