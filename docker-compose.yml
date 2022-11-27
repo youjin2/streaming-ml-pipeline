@@ -12,10 +12,22 @@ services:
       BENTOML_HOME: ${BENTOML_HOME}
     volumes:
       - ./:/opt/project
-      - ./${BENTOML_HOME}:/${BENTOML_HOME}
     stdin_open: true
     tty: true
     command: >
       bash -c "
       cd / && jupyter notebook --no-browser --allow-root --ip='*' --port=8888 --NotebookApp.password='' --NotebookApp.token=''
       "
+  postgres:
+    build:
+      context: ./docker/postgres
+    image: ${POSTGRES_IMAGE_NAME}:${VERSION}
+    container_name: postgres
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ./docker/postgres/data:/var/lib/postgresql/data

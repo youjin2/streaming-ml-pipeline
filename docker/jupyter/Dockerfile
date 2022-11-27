@@ -14,3 +14,5 @@ RUN echo "alias ll='ls -alF'" >> ~/.bashrc && \
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt
+
+WORKDIR /opt/project
