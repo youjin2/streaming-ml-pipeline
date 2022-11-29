@@ -9,3 +9,4 @@ matplotlib
 scipy==1.9.3
 bentoml==1.0.6
 pydantic==1.10.2
+psycopg2==2.9.5
