@@ -1,23 +1,18 @@
 version: "3"
 services:
-  jupyter:
-    build:
-      context: ./docker/jupyter
-    image: ${JUPYTER_IMAGE_NAME}:${VERSION}
-    container_name: jupyter
+  zookeeper:
+    image: quay.io/debezium/zookeeper:latest
+    container_name: zookeper-car-data
+
+  kafka:
+    image: quay.io/debezium/kafka:latest
+    container_name: kafka
     ports:
-      - "${JUPYTER_PORT}:8888"
-      - "${BENTOML_SERVE_PORT}:3000"
+     - "${KAFKA_PORT}:9092"
+    links:
+     - zookeeper
     environment:
-      BENTOML_HOME: ${BENTOML_HOME}
-    volumes:
-      - ./:/opt/project
-    stdin_open: true
-    tty: true
-    command: >
-      bash -c "
-      cd / && jupyter notebook --no-browser --allow-root --ip='*' --port=8888 --NotebookApp.password='' --NotebookApp.token=''
-      "
+      ZOOKEEPER_CONNECT: ${ZOOKEEPER_CONNECT}
 
   postgres:
     build:
@@ -32,20 +27,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - ./docker/postgres/data:/var/lib/postgresql/data
-
-  zookeeper:
-    image: quay.io/debezium/zookeeper:latest
-    container_name: zookeper-car-data
-
-  kafka:
-    image: quay.io/debezium/kafka:latest
-    container_name: kafka
-    ports:
-     - "${KAFKA_PORT}:9092"
-    links:
-     - zookeeper
-    environment:
-      ZOOKEEPER_CONNECT: ${ZOOKEEPER_CONNECT}
 
   adminer:
     image: adminer
@@ -72,3 +53,6 @@ services:
       OFFSET_STORAGE_TOPIC: ${OFFSET_STORAGE_TOPIC}
       STATUS_STORAGE_TOPIC: ${STATUS_STORAGE_TOPIC}
       CONNECT_JDBC_URL: ${CONNECT_JDBC_URL}
+
+  #python-app:
+  #  container
