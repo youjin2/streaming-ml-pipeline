@@ -54,5 +54,14 @@ services:
       STATUS_STORAGE_TOPIC: ${STATUS_STORAGE_TOPIC}
       CONNECT_JDBC_URL: ${CONNECT_JDBC_URL}
 
-  #python-app:
-  #  container
+  python-app:
+    build:
+      context: ./docker/python-app
+    image: ${PYTHON_APP_IMAGE_NAME}:${VERSION}
+    container_name: python-app
+    command: >
+      bash -c "
+      python debezium_connectors.py
+      "
+    volumes:
+      - ./docker/python-app/app:/opt/src/app
