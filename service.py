@@ -13,8 +13,6 @@ svc = bentoml.Service(
 
 @svc.api(input=JSON(), output=JSON())
 def predict(inputs: JSON):
-    print(inputs)
     inputs = pd.DataFrame(inputs)
-    print(inputs)
     outputs = price_prediction_runner.run(inputs)
     return outputs

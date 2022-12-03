@@ -1,0 +1,9 @@
+service: "service.py:svc"
+include:
+ - "service.py"
+ - "src/pipeline/*.py"
+python:
+  packages:
+   - scikit-learn==1.1.2
+   - xgboost==1.6.2
+   - pandas==1.4.4
