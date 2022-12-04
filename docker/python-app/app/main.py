@@ -14,10 +14,10 @@ FIELDS = {
     "year": "year",
     "transmission": "transmission",
     "mileage": "mileage",
-    "fuletype": "fuelType",
+    "fule_type": "fuelType",
     "tax": "tax",
     "mpg": "mpg",
-    "enginesize": "engineSize",
+    "engine_size": "engineSize",
 }
 
 # bentoml api enpoint to request the prediction
@@ -46,7 +46,6 @@ if __name__ == "__main__":
             "bootstrap.servers": "kafka:9092",
         }
     )
-
     while True:
         msg = consumer.poll(1.0)
         if msg is None:

@@ -45,7 +45,7 @@ CONNECTORS = [
 ]
 
 # wait until the debezium server to be ready
-time.sleep(50)
+time.sleep(30)
 
 
 # write connectors to the debezium server
