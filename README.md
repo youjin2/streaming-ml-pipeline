@@ -1,2 +1,111 @@
-# streaming-ml-pipeline
-Toy project for reproducing streamling ML serving environment with Kafka.
+## Goals
+
+
+## Train & Save Bentoml Model
+```bash
+$ python -m src.pipeline.train
+
+$ bentoml models list
+
+# output: 
+ Tag                                   Module           Size        Creation Time
+ ford_used_car_price:yczl35ttakexcasc  bentoml.sklearn  390.06 KiB  2022-12-03 12:05:17
+
+# launch api server
+$ bentoml serve service.py:svc --host 0.0.0.0 --port 3000 --reload
+
+# response
+$ curl -X \
+    POST -H "content-type: application/json" \
+    --data '{"model": ["C-MAX", "EcoSport"], "year": [2014, 2019], "price": [8295, 18995], "transmission": ["Semi-Auto", "Automatic"], "mileage": [40000, 1400], "fuelType": ["Diesel", "Petrol"], "tax": [160, 150], "mpg": [50.4, 44.1], "engineSize": [2.0, 1.0]}' \
+    http://0.0.0.0:12000/predict
+```
+
+ColumnTransformer `n_jobs` argument
+```bash
+joblib.externals.loky.process_executor.TerminatedWorkerError: A worker process managed by the executor was unexpectedly terminated.
+This could be caused by a segmentation fault while calling the function or by an excessive memory usage causing the Operating System to kill the worker.
+The exit codes of the workers are {SIGTERM(-15)}
+```
+
+build bentos (on container)
+```bash
+# project root
+$ cd /opt/project
+
+# build the bento
+$ bentoml build
+
+$ bentoml list
+
+# output:
+ Tag                                        Size        Creation Time        Path
+ price_prediction_service:ym3pedttakagcasc  411.61 KiB  2022-12-03 12:05:23  /opt/project/bentoml/bentos/price_prediction_service/ym3pedttakagcasc
+
+# test api server
+$ bentoml serve --host price_prediction_service --host 0.0.0.0 --port 3000 --production
+```
+
+
+contanerize
+write bentofile  
+NOTE: must include pipeline codes (`src/pipeline/*.p`y) since bentoml sklearn uses joblib which stores the entire path of the scripts
+
+```bash
+# project root
+$ cd streaming-ml-pipeline/
+
+$ export BENTOML_HOME=`pwd`/bentoml/ && bentoml containerize price_prediction_service:latest
+
+# docker
+$ docker run --rm -p 12000:3000 price_prediction_service:zvumcqtsi273easc serve --production
+```
+
+
+
+
+## Setup streaming-ml pipeline
+postgres
+The `wal_level=logical` is a configuration needed to Postgres work correctly with Debezium.
+
+debezium base endpoint
+- http://125.186.140.165:8083/
+- http://125.186.140.165:8083/connector-plugins/
+- http://125.186.140.165:8083/connectors/
+
+adminer
+- http://125.186.140.165:8080/
+
+
+run below in kafka or debezium container
+```bash
+$ kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic car_database.public.tbl_car_price
+```
+wait until python-app creating debeizum connections
+<img src="docs/figures/kafka_consumer_example1.png" width="2000" height="45">
+
+update `tbl_car_price` table (left or right)
+
+<img src="docs/figures/adminer_insert_example1.png" width="420"/> <img src="docs/figures/adminer_insert_example2.png" width="450" height=220/> 
+<!--![alt-text-1](docs/figures/adminer_insert_example1.png "title-1") ![alt-text-2](docs/figures/kafka_consumer_example2.png "title-2")-->
+
+![title](docs/figures/kafka_consumer_example3.png)
+
+
+
+## References
+- [Machine Learning Streaming with Kafka, Debezium, and BentoML]
+- [Introduction to Kafka]
+- [Streaming data to a downstream database]
+- [Tutorial: Intro to BentoML]
+- [Brief introduction to BentoML on my repo]
+- [Ford used car dataset (Kaggle)]
+
+
+[Machine Learning Streaming with Kafka, Debezium, and BentoML]: https://towardsdatascience.com/machine-learning-streaming-with-kafka-debezium-and-bentoml-c5f3996afe8f
+[Introduction to Kafka]: https://docs.confluent.io/5.5.1/kafka/introduction.html
+[Streaming data to a downstream database]: https://debezium.io/blog/2017/09/25/streaming-to-another-database/
+[Tutorial: Intro to BentoML]: https://docs.bentoml.org/en/latest/tutorial.html
+[Brief introduction to BentoML on my repo]: https://github.com/youjin2/mlops/tree/main/bentoml
+[ml-streaming-kafka-cdc-github]: https://github.com/jaumpedro214/ml-streming-kafka-cdc
+[Ford used car dataset (Kaggle)]: https://www.kaggle.com/datasets/mysarahmadbhat/ford-used-car-listing
