@@ -1,7 +1,7 @@
 service: "service.py:svc"
 include:
  - "service.py"
- - "src/pipeline/*.py"
+ - "src/*.py"
 python:
   packages:
    - scikit-learn==1.1.2

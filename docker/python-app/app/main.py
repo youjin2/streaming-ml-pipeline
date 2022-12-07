@@ -14,7 +14,7 @@ FIELDS = {
     "year": "year",
     "transmission": "transmission",
     "mileage": "mileage",
-    "fule_type": "fuelType",
+    "fuel_type": "fuelType",
     "tax": "tax",
     "mpg": "mpg",
     "engine_size": "engineSize",
