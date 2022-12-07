@@ -9,7 +9,7 @@ def read_ford_data():
     read ford used car price dataset
     """
     cur_dir = __file__
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(cur_dir)))
+    base_dir = os.path.dirname(os.path.dirname(cur_dir))
     data_path = os.path.join(
         base_dir,
         "data",
