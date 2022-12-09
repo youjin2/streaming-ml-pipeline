@@ -1,14 +1,23 @@
 import json
-import pprint
+import logging
 
 import confluent_kafka as ck
 import requests
 
-SOURCE_TOPICS = ["car_database.public.car_data"]
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="[%(levelname)s] %(message)s (%(filename)s:%(lineno)d)",
+)
+
+
+# kafka settings
+SOURCE_TOPICS = ["car_database.public.tbl_car_price"]
 SINK_TOPIC = "car_data_predicted"
+BOOTSTRAP_SERVER = "kafka:9092"
 
 
-# fields used to predict the price
+# fields required to predict the car price
 FIELDS = {
     "model": "model",
     "year": "year",
@@ -21,76 +30,101 @@ FIELDS = {
 }
 
 # bentoml api enpoint to request the prediction
-BENTOML_URL = "http://bento:3000/predict"
+BENTO_ENDPOINT = "http://streaming-ml-pipeline_bento_server_1:3000/predict"
 
 
-def main():
-    pass
+class KafkaBuilder:
+
+    def __init__(self):
+        # build consumer and producer instances
+        self.__consumer = ck.Consumer(
+            {
+                "bootstrap.servers": BOOTSTRAP_SERVER,
+                "group.id": "teste",
+                "auto.offset.reset": "earliest",
+            }
+        )
+        self.__consumer.subscribe(SOURCE_TOPICS)
+
+        self.__producer = ck.Producer(
+            {
+                "bootstrap.servers": BOOTSTRAP_SERVER,
+            }
+        )
+
+    @property
+    def consumer(self):
+        """consumer.
+        returns consumer instance
+        """
+        return self.__consumer
+
+    @property
+    def producer(self):
+        """producer.
+        returns producer instance
+        """
+        return self.__producer
+
+
+class RequestHandler:
+
+    def __init__(self):
+        pass
+
+    def parse_inputs(self, message_dict: dict):
+        input_dict = {
+            api_col: [message_dict["payload"][db_col]]
+            for db_col, api_col in FIELDS.items()
+        }
+
+        return input_dict
+
+    def predict(self, input_dict: dict):
+        response = requests.post(BENTO_ENDPOINT, json=input_dict)
+        if response.status_code != 200:
+            pred_price = None
+            logging.error(f"BENTOML API request failed (code: {response.status_code}, message: {response.text})")
+        else:
+            pred_price = float(json.loads(response.text)[0])
+
+        return pred_price
 
 
 if __name__ == "__main__":
 
-    # Configure the consumer
-    # to consume from the topic
-    consumer = ck.Consumer(
-        {
-            "bootstrap.servers": "kafka:9092",
-            "group.id": "teste",
-            "auto.offset.reset": "earliest",
-        }
-    )
-    consumer.subscribe(SOURCE_TOPICS)
+    builder = KafkaBuilder()
+    api_handler = RequestHandler()
 
-    producer = ck.Producer(
-        {
-            "bootstrap.servers": "kafka:9092",
-        }
-    )
     while True:
-        msg = consumer.poll(1.0)
+        msg = builder.consumer.poll(1.0)
         if msg is None:
             continue
         if msg.value() is None:
             continue
         if msg.error():
-            print("Consumer error: {}".format(msg.error()))
+            logging.error("Consumer error: {}".format(msg.error()))
             continue
 
-        # Retrieve the message and the key
+        # retrieve the message and the key
         message = msg.value().decode("utf-8")
         key = msg.key().decode("utf-8")
 
-        # load message as JSON
-        json_message = json.loads(message)
+        # get predicted car price
+        message_dict = json.loads(message)
+        input_dict = api_handler.parse_inputs(message_dict=message_dict)
 
-        # Create a new message with the fields used to predict the price
-        # this message will be sent to the BentoML server
-        ml_message = {
-            field_name: json_message['payload'][field]
-            for field, field_name
-            in FIELDS.items()
-        }
+        # update the suggested price field
+        pred_price = api_handler.predict(input_dict=input_dict)
+        message_dict["payload"]["suggested_price"] = pred_price
 
-        # Request the BentoML deoloyed server to predict the price
-        # and add the predicted price to the message
-        response = requests.post(
-            BENTOML_URL,
-            json=ml_message
-        )
-
-        print(response.json())
-
-        # Add the predicted price to the message
-        json_message["payload"]["suggestedprice"] = float(response.json())
-
-        print("Consumed message")
-        pprint.pprint(json_message["payload"])
-
-        # Send the message to the topic
-        # with the predicted price
-        producer.produce(
+        # send the message to the topic with the suggested price
+        builder.producer.produce(
             SINK_TOPIC,
             key=key,
-            value=json.dumps(json_message)
+            value=json.dumps(message_dict)
         )
-        producer.flush()
+        builder.producer.flush(1)
+
+        # log the result
+        logging.info(message_dict)
