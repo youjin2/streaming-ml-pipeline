@@ -9,7 +9,7 @@ $ bentoml models list
 
 # output: 
  Tag                                   Module           Size        Creation Time
- ford_used_car_price:yczl35ttakexcasc  bentoml.sklearn  390.06 KiB  2022-12-03 12:05:17
+ ford_used_car_price:mh5soxdweoxxmasc  bentoml.sklearn  390.06 KiB  2022-12-03 12:05:17
 
 # launch api server
 $ bentoml serve service.py:svc --host 0.0.0.0 --port 3000 --reload
@@ -40,7 +40,7 @@ $ bentoml list
 
 # output:
  Tag                                        Size        Creation Time        Path
- price_prediction_service:ym3pedttakagcasc  411.61 KiB  2022-12-03 12:05:23  /opt/project/bentoml/bentos/price_prediction_service/ym3pedttakagcasc
+ price_prediction_service:56n5jrtweondqasc  411.61 KiB  2022-12-03 12:05:23  /opt/project/bentoml/bentos/price_prediction_service/ym3pedttakagcasc
 
 # test api server
 $ bentoml serve --host price_prediction_service --host 0.0.0.0 --port 3000 --production
@@ -58,7 +58,7 @@ $ cd streaming-ml-pipeline/
 $ export BENTOML_HOME=`pwd`/bentoml/ && bentoml containerize price_prediction_service:latest
 
 # docker
-$ docker run --rm -p 12000:3000 price_prediction_service:zvumcqtsi273easc serve --production
+$ docker run --rm -p 12000:3000 price_prediction_service:56n5jrtweondqasc serve --production
 ```
 
 
@@ -79,17 +79,43 @@ adminer
 
 run below in kafka or debezium container
 ```bash
+# kafka conatiner
+$ docker exec -it kafka /bin/bash
+
+# monitor consumer logs
 $ kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic car_database.public.tbl_car_price
 ```
 wait until python-app creating debeizum connections
-<img src="docs/figures/kafka_consumer_example1.png" width="2000" height="45">
+![title](docs/figures/kafka_consumer_example1.png)
 
-update `tbl_car_price` table (left or right)
 
-<img src="docs/figures/adminer_insert_example1.png" width="420"/> <img src="docs/figures/adminer_insert_example2.png" width="450" height=220/> 
+Update `tbl_car_price` table via `SQL command` (left) or directly insert by clicking `New item button` (right)
+
+<img src="docs/figures/adminer_insert_example1.png" width="420"/> <img src="docs/figures/adminer_insert_example2.png" width="420" height=230/> 
 <!--![alt-text-1](docs/figures/adminer_insert_example1.png "title-1") ![alt-text-2](docs/figures/kafka_consumer_example2.png "title-2")-->
 
+
+You can 
+![title](docs/figures/adminer_insert_example3.png)
+
+message created on Kafaka which is written in `AVRO`
 ![title](docs/figures/kafka_consumer_example3.png)
+
+
+bentoml requests between docker-compose network
+how to know (or fix) internal network ip address?
+```python
+>>> import requests
+
+>>> inputs = {'engineSize': [1.2], 'fuelType': ['Diesel'], 'mileage': [5060], 'model': ['C-MAX'], 'mpg': [45.2], 'tax': [165], 'transmission': ['Manual'], 'year': [2017]}
+>>> requests.post("http://172.26.0.3:3000/predict", json=inputs)
+>>> requests.post("http://streaming-ml-pipeline_bento_server_1:3000/predict", json=inputs)
+```
+
+```bash
+$ docker inspect -f '{{.Name}} - {{range $net,$v := .NetworkSettings.Networks}}{{printf "%s" $net}}{{end}} - {{range .NetworkSettings.Networks}}{{.IPAddress}} - {{.NetworkID}}{{end}}' $(docker
+ps -aq)
+```
 
 
 
