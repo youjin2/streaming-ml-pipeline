@@ -61,7 +61,12 @@ services:
     container_name: python-app
     command: >
       bash -c "
-      python debezium_connectors.py
+      python debezium_connectors.py && python ./app/main.py
       "
     volumes:
       - ./docker/python-app/app:/opt/src/app
+
+  bento_server:
+    image: price_prediction_service:56n5jrtweondqasc
+    ports:
+      - 3000:3000
