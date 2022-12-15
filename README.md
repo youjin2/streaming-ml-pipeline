@@ -2,8 +2,18 @@
 
 
 ## Train & Save Bentoml Model
+Setup dev environment.
 ```bash
-$ python -m src.pipeline.train
+# build jupyter & bnetoml serve docker stack
+$ docker-compose -f docker-compose-dev.yml build
+
+# run docker container for training the model
+$ docker-compose -f docker-compose-dev.yml up -d
+```
+
+Train the car price predicting model.
+```bash
+$ python -m src.train
 
 $ bentoml models list
 
@@ -116,6 +126,14 @@ how to know (or fix) internal network ip address?
 $ docker inspect -f '{{.Name}} - {{range $net,$v := .NetworkSettings.Networks}}{{printf "%s" $net}}{{end}} - {{range .NetworkSettings.Networks}}{{.IPAddress}} - {{.NetworkID}}{{end}}' $(docker
 ps -aq)
 ```
+
+
+```bash
+$ docker logs python-app
+```
+
+![title](./docs/figures/kafka_source_topic.png)
+![title](docs/figures/kafka_sink_topic.png)
 
 
 
