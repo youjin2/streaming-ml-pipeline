@@ -1,4 +1,15 @@
-## Goals
+## Introduction
+In this project, we will cover a brief introduction to ML serving pipeline processing real-time streaming data with `Apache Kafka`. 
+More specifically, we will use `Debezium` to automatically capture changes in the database, and `BentoML` to serve the ML model and get the predictions for the target event. 
+A detailed description to these frameworks will be covered in later sections. 
+
+Dataset used in this project is `Ford car price prediction dataset` providede by `Kaggle`. 
+The goal is to predict the price of used car given information such as the year, transmission type, and engine size etc, and we are going to train `XGBoostRegressor` to build ML model predicting the used car price.
+
+
+## Dependencies
+- docker
+- docker-compose
 
 
 ## Train & Save Bentoml Model
@@ -79,12 +90,12 @@ postgres
 The `wal_level=logical` is a configuration needed to Postgres work correctly with Debezium.
 
 debezium base endpoint
-- http://125.186.140.165:8083/
-- http://125.186.140.165:8083/connector-plugins/
-- http://125.186.140.165:8083/connectors/
+- http://0.0.0.0:8083/
+- http://0.0.0.0:8083/connector-plugins/
+- http://0.0.0.0:8083/connectors/
 
 adminer
-- http://125.186.140.165:8080/
+- http://0.0.0.0:8080/
 
 
 run below in kafka or debezium container
@@ -143,7 +154,7 @@ $ docker logs python-app
 - [Streaming data to a downstream database]
 - [Tutorial: Intro to BentoML]
 - [Brief introduction to BentoML on my repo]
-- [Ford used car dataset (Kaggle)]
+- [Ford Car Prediction Dataset (Kaggle)]
 
 
 [Machine Learning Streaming with Kafka, Debezium, and BentoML]: https://towardsdatascience.com/machine-learning-streaming-with-kafka-debezium-and-bentoml-c5f3996afe8f
@@ -152,4 +163,4 @@ $ docker logs python-app
 [Tutorial: Intro to BentoML]: https://docs.bentoml.org/en/latest/tutorial.html
 [Brief introduction to BentoML on my repo]: https://github.com/youjin2/mlops/tree/main/bentoml
 [ml-streaming-kafka-cdc-github]: https://github.com/jaumpedro214/ml-streming-kafka-cdc
-[Ford used car dataset (Kaggle)]: https://www.kaggle.com/datasets/mysarahmadbhat/ford-used-car-listing
+[Ford Car Prediction Dataset (Kaggle)]: https://www.kaggle.com/datasets/mysarahmadbhat/ford-used-car-listing
