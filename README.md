@@ -8,18 +8,24 @@ The goal is to predict the price of used car given information such as the year,
 
 
 ## Dependencies
-- docker
+Dependencies required to reproduce this project are:
+- Docker
 - docker-compose
+- Python >= 3.9
+- bentoml==1.0.6
+
+You can build python-dev environment used to train and deploy our ML model with:
+```bash
+$ docker-compose -f docker-compose-dev.yml build
+```
 
 
-## Train & Save Bentoml Model
+## Train & Deploy Bentoml Model
 Setup dev environment.
 ```bash
-# build jupyter & bnetoml serve docker stack
-$ docker-compose -f docker-compose-dev.yml build
-
 # run docker container for training the model
 $ docker-compose -f docker-compose-dev.yml up -d
+$ docker exec -it jupyter /bin/bash
 ```
 
 Train the car price predicting model.
@@ -76,7 +82,7 @@ NOTE: must include pipeline codes (`src/pipeline/*.p`y) since bentoml sklearn us
 # project root
 $ cd streaming-ml-pipeline/
 
-$ export BENTOML_HOME=`pwd`/bentoml/ && bentoml containerize price_prediction_service:latest
+$ export BENTOML_HOME=`pwd`/bentoml/ && bentoml containerize price_prediction_service:latest -t price_prediction_service:0.1.0
 
 # docker
 $ docker run --rm -p 12000:3000 price_prediction_service:56n5jrtweondqasc serve --production
@@ -86,6 +92,12 @@ $ docker run --rm -p 12000:3000 price_prediction_service:56n5jrtweondqasc serve 
 
 
 ## Setup streaming-ml pipeline
+Docker-stack environment used to reproduce streaming-ml-pipeline can be built with:  
+Note that since the service `bento_server` dependes on the already built bento, you need to train & build the bento in advance to build this docker-stack images successfully.
+```bash
+$ docker-compose -f docker-compose.yml build
+```
+
 postgres
 The `wal_level=logical` is a configuration needed to Postgres work correctly with Debezium.
 
