@@ -16,5 +16,6 @@ services:
     tty: true
     command: >
       bash -c "
-      cd / && jupyter notebook --no-browser --allow-root --ip='*' --port=8888 --NotebookApp.password='' --NotebookApp.token=''
+      cd / 
+      && jupyter notebook --no-browser --allow-root --ip='*' --port=8888 --NotebookApp.password='' --NotebookApp.token=''
       "
