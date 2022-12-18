@@ -67,6 +67,6 @@ services:
       - ./docker/python-app/app:/opt/src/app
 
   bento_server:
-    image: price_prediction_service:56n5jrtweondqasc
+    image: price_prediction_service:0.1.0
     ports:
       - 3000:3000
