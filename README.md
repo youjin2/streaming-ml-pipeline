@@ -14,30 +14,45 @@ Dependencies required to reproduce this project are:
 - Python >= 3.9
 - bentoml==1.0.6
 
-You can build python-dev environment used to train and deploy our ML model with:
-```bash
-$ docker-compose -f docker-compose-dev.yml build
-```
-
 
 ## Train & Deploy Bentoml Model
-Setup dev environment.
+[BentoML] is an unified model serving framework that enables ML engineers to accelerate and standardize the process of taking ML models into production.
+As mentioned in the `Introduction`, we will use `BentoML` as a framework to serve the ML model throughout this project.
+If you are a beginner to `BentoML`, [Tutorial: Intro to BentoML] would be a nice introduction.  
+Now, let's get start training our car price predicting model.
+
+First, build python-dev environment used to train and deploy our ML model with:
+```bash
+$ docker-compose -f docker-compose-dev.yml build
+
+# check that the "streaming-ml-jupyter" image created
+$ docker images
+
+# output:
+REPOSITORY                                        TAG                IMAGE ID       CREATED        SIZE
+streaming-ml-jupyter                              0.1.0              5b4e80dc8277   2 weeks ago    2.13GB
+```
+
+After creating `streaming-ml-jupyter` image, run `jupyter` container with:
 ```bash
 # run docker container for training the model
 $ docker-compose -f docker-compose-dev.yml up -d
 $ docker exec -it jupyter /bin/bash
 ```
 
-Train the car price predicting model.
+Now, let's train and save `BentoML model` by running commands below in the docker container:
 ```bash
 $ python -m src.train
 
+# check out the saved models list
 $ bentoml models list
 
 # output: 
  Tag                                   Module           Size        Creation Time
  ford_used_car_price:mh5soxdweoxxmasc  bentoml.sklearn  390.06 KiB  2022-12-03 12:05:17
+```
 
+```bash
 # launch api server
 $ bentoml serve service.py:svc --host 0.0.0.0 --port 3000 --reload
 
@@ -84,6 +99,14 @@ $ cd streaming-ml-pipeline/
 
 $ export BENTOML_HOME=`pwd`/bentoml/ && bentoml containerize price_prediction_service:latest -t price_prediction_service:0.1.0
 
+# check that the "streaming-ml-jupyter" image created
+$ docker images
+
+# output:
+REPOSITORY                                        TAG                IMAGE ID       CREATED        SIZE
+price_prediction_service                          0.1.0              1a6fb70af53f   12 days ago    1.15GB
+streaming-ml-jupyter                              0.1.0              5b4e80dc8277   2 weeks ago    2.13GB
+
 # docker
 $ docker run --rm -p 12000:3000 price_prediction_service:56n5jrtweondqasc serve --production
 ```
@@ -96,6 +119,17 @@ Docker-stack environment used to reproduce streaming-ml-pipeline can be built wi
 Note that since the service `bento_server` dependes on the already built bento, you need to train & build the bento in advance to build this docker-stack images successfully.
 ```bash
 $ docker-compose -f docker-compose.yml build
+
+# check that the "streaming-ml-jupyter" image created
+$ docker images
+
+# output:
+REPOSITORY                                        TAG                IMAGE ID       CREATED        SIZE
+streaming-ml-python-app                           0.1.0              858525c42981   11 days ago    953MB
+price_prediction_service                          0.1.0              1a6fb70af53f   12 days ago    1.15GB
+streaming-ml-debezium                             0.1.0              00bbf6094025   2 weeks ago    941MB
+streaming-ml-jupyter                              0.1.0              5b4e80dc8277   2 weeks ago    2.13GB
+streaming-ml-postgres                             0.1.0              40039281dc29   3 weeks ago    314MB
 ```
 
 postgres
@@ -176,3 +210,4 @@ $ docker logs python-app
 [Brief introduction to BentoML on my repo]: https://github.com/youjin2/mlops/tree/main/bentoml
 [ml-streaming-kafka-cdc-github]: https://github.com/jaumpedro214/ml-streming-kafka-cdc
 [Ford Car Prediction Dataset (Kaggle)]: https://www.kaggle.com/datasets/mysarahmadbhat/ford-used-car-listing
+[BentoML]: https://docs.bentoml.org/en/latest/index.html
