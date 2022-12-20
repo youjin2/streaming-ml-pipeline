@@ -75,35 +75,42 @@ Moreover, a python example for API request also can be found at [03\_api\_reques
 
 **NOTE:** If you got an error message like below in your API server logs, check whether the `n_jobs` argument of `sklearn` `ColumnTransformer` is set to 1 correctly.
 (`BentoML` save/restore the sklearn model instance with `joblib.dump/joblib.load` which preserves the `n_jobs` argrument and this raises a seg-fault error.)
+
 ```bash
 joblib.externals.loky.process_executor.TerminatedWorkerError: A worker process managed by the executor was unexpectedly terminated.
 This could be caused by a segmentation fault while calling the function or by an excessive memory usage causing the Operating System to kill the worker.
 The exit codes of the workers are {SIGTERM(-15)}
 ```
 
-**iv) Build the Bentos (on container)**
+**iv) Build the Bento**
+
+Now, let's build the `Bento` to deploy it as a docker image:
 ```bash
 # project root
 $ cd /opt/project
 
-# build the bento
+# build the bento (note that the "bentofile.yaml" must be defined in advance)
+# $ bentoml build --version 0.1.0
+# $ bentoml delete price_prediction_service:0.1.0
 $ bentoml build
 
+# check the built bento
 $ bentoml list
 
 # output:
  Tag                                        Size        Creation Time        Path
  price_prediction_service:56n5jrtweondqasc  411.61 KiB  2022-12-03 12:05:23  /opt/project/bentoml/bentos/price_prediction_service/ym3pedttakagcasc
 
-# test api server
+# test production api server
 $ bentoml serve --host price_prediction_service --host 0.0.0.0 --port 3000 --production
 ```
 
+**NOTE:** The entire pipeline codes (`src/pipeline/*.py`) must be included in `bentofile` because `BentoML` uses the `joblib.dump`, which stores the entire path of the scripts, to save the sklearn instance.
 
-contanerize
-write bentofile  
-NOTE: must include pipeline codes (`src/pipeline/*.p`y) since bentoml sklearn uses joblib which stores the entire path of the scripts
 
+**v) Containerize the Bento**
+
+Finally, containerize the `Bento` built in the previous step for use in the streaming ML pipeline:
 ```bash
 # project root
 $ cd streaming-ml-pipeline/
@@ -121,8 +128,6 @@ streaming-ml-jupyter                              0.1.0              5b4e80dc827
 # docker
 $ docker run --rm -p 12000:3000 price_prediction_service:56n5jrtweondqasc serve --production
 ```
-
-
 
 
 ## Setup streaming-ml pipeline
