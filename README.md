@@ -21,7 +21,7 @@ As mentioned in the `Introduction`, we will use `BentoML` as a framework to serv
 If you are a beginner to `BentoML`, [Tutorial: Intro to BentoML] would be a nice introduction.  
 Now, let's get start training our car price predicting model.
 
-First, build python-dev environment used to train and deploy our ML model with:
+**i) Build python-dev environment used to train and deploy our ML model**
 ```bash
 $ docker-compose -f docker-compose-dev.yml build
 
@@ -31,17 +31,22 @@ $ docker images
 # output:
 REPOSITORY                                        TAG                IMAGE ID       CREATED        SIZE
 streaming-ml-jupyter                              0.1.0              5b4e80dc8277   2 weeks ago    2.13GB
-```
 
-After creating `streaming-ml-jupyter` image, run `jupyter` container with:
-```bash
 # run docker container for training the model
 $ docker-compose -f docker-compose-dev.yml up -d
 $ docker exec -it jupyter /bin/bash
 ```
 
-Now, let's train and save `BentoML model` by running commands below in the docker container:
+**ii) Train car prediction ML model and save it as a `BentoML model`**
+
+A detailed code examples for EDA about `Ford used car dataset` and training process including data-preprocessing steps can be found at:
+- [01\_eda\_ford\_used\_car\_dataset.ipynb]
+- [02\_train\_car\_price\_prediction\_model.ipynb]
+
+In case you want to skip the above examples, I have written a python script that trains the ML model and save it as a `BentoML` model.  
+In that case, just run commands below in the docker container:
 ```bash
+# train and save the BentoML model
 $ python -m src.train
 
 # check out the saved models list
@@ -52,25 +57,31 @@ $ bentoml models list
  ford_used_car_price:mh5soxdweoxxmasc  bentoml.sklearn  390.06 KiB  2022-12-03 12:05:17
 ```
 
+**iii) Test `Bento` serving API**
+
+You can test the serving API by running commands below in docker container:
 ```bash
-# launch api server
+# launch api server inside "jupyter" docker container
 $ bentoml serve service.py:svc --host 0.0.0.0 --port 3000 --reload
 
-# response
+# get api response by running below on local machine
+# (or you can also get the response in docker container by changing the port to 3000)
 $ curl -X \
     POST -H "content-type: application/json" \
     --data '{"model": ["C-MAX", "EcoSport"], "year": [2014, 2019], "price": [8295, 18995], "transmission": ["Semi-Auto", "Automatic"], "mileage": [40000, 1400], "fuelType": ["Diesel", "Petrol"], "tax": [160, 150], "mpg": [50.4, 44.1], "engineSize": [2.0, 1.0]}' \
     http://0.0.0.0:12000/predict
 ```
+Moreover, a python example for API request also can be found at [03\_api\_requests\_example.ipynb].
 
-ColumnTransformer `n_jobs` argument
+**NOTE:** If you got an error message like below in your API server logs, check whether the `n_jobs` argument of `sklearn` `ColumnTransformer` is set to 1 correctly.
+(`BentoML` save/restore the sklearn model instance with `joblib.dump/joblib.load` which preserves the `n_jobs` argrument and this raises a seg-fault error.)
 ```bash
 joblib.externals.loky.process_executor.TerminatedWorkerError: A worker process managed by the executor was unexpectedly terminated.
 This could be caused by a segmentation fault while calling the function or by an excessive memory usage causing the Operating System to kill the worker.
 The exit codes of the workers are {SIGTERM(-15)}
 ```
 
-build bentos (on container)
+**iv) Build the Bentos (on container)**
 ```bash
 # project root
 $ cd /opt/project
@@ -211,3 +222,6 @@ $ docker logs python-app
 [ml-streaming-kafka-cdc-github]: https://github.com/jaumpedro214/ml-streming-kafka-cdc
 [Ford Car Prediction Dataset (Kaggle)]: https://www.kaggle.com/datasets/mysarahmadbhat/ford-used-car-listing
 [BentoML]: https://docs.bentoml.org/en/latest/index.html
+[01\_eda\_ford\_used\_car\_dataset.ipynb]: https://github.com/youjin2/streaming-ml-pipeline/blob/main/notebooks/01_eda_ford_used_car_dataset.ipynb
+[02\_train\_car\_price\_prediction\_model.ipynb]: https://github.com/youjin2/streaming-ml-pipeline/blob/main/notebooks/02_train_car_price_prediction_model.ipynb
+[03\_api\_requests\_example.ipynb]: https://github.com/youjin2/streaming-ml-pipeline/blob/main/notebooks/03_api_requests_example.ipynb
