@@ -1,6 +1,6 @@
 ## Introduction
 In this project, we will cover a brief introduction to ML serving pipeline processing real-time streaming data with `Apache Kafka`. 
-More specifically, we will use `Debezium` to automatically capture changes in the database, and `BentoML` to serve the ML model and get the predictions for the target event. 
+More specifically, we will use `Debezium` to automatically capture changes of the database, and `BentoML` to serve the ML model and get the predictions for the target event. 
 A detailed description to these frameworks will be covered in later sections. 
 
 Dataset used in this project is `Ford car price prediction dataset` providede by `Kaggle`. 
@@ -105,7 +105,7 @@ $ bentoml list
 $ bentoml serve --host price_prediction_service --host 0.0.0.0 --port 3000 --production
 ```
 
-**NOTE:** The entire pipeline codes (`src/pipeline/*.py`) must be included in `bentofile` because `BentoML` uses the `joblib.dump`, which stores the entire path of the scripts, to save the sklearn instance.
+**NOTE:** The entire pipeline codes (`src/pipeline/*.py`) must be included in `bentofile` because `BentoML` uses the `joblib.dump`, which stores the entire path of the module imported, to save the sklearn instance.
 
 
 **v) Containerize the Bento**
@@ -126,11 +126,23 @@ price_prediction_service                          0.1.0              1a6fb70af53
 streaming-ml-jupyter                              0.1.0              5b4e80dc8277   2 weeks ago    2.13GB
 
 # docker
-$ docker run --rm -p 12000:3000 price_prediction_service:56n5jrtweondqasc serve --production
+$ docker run --rm -p 12000:3000 price_prediction_service:0.1.0 serve --production
 ```
 
 
 ## Setup streaming-ml pipeline
+So far, we've trained a ML model predicting the used car price and deployed it as a containerized API service to be used for streaming-ml-pipeline. 
+Now it's time to build the streaming-ml-pipeline.
+
+Before we get into it, let's first define the problem.
+Suppose you are operating a trading platform where user can sell their car after registering some required information.
+They can set the selling price by themselves, but if they don't know the proper price, they may need some recommendation about it.
+
+
+[Kafka] is a. There're two connectors in Kafka: source connector and sink connector.
+
+[Debezium]
+
 Docker-stack environment used to reproduce streaming-ml-pipeline can be built with:  
 Note that since the service `bento_server` dependes on the already built bento, you need to train & build the bento in advance to build this docker-stack images successfully.
 ```bash
@@ -227,6 +239,8 @@ $ docker logs python-app
 [ml-streaming-kafka-cdc-github]: https://github.com/jaumpedro214/ml-streming-kafka-cdc
 [Ford Car Prediction Dataset (Kaggle)]: https://www.kaggle.com/datasets/mysarahmadbhat/ford-used-car-listing
 [BentoML]: https://docs.bentoml.org/en/latest/index.html
+[Kafka]: https://kafka.apache.org/
+[Debezium]: https://debezium.io/
 [01\_eda\_ford\_used\_car\_dataset.ipynb]: https://github.com/youjin2/streaming-ml-pipeline/blob/main/notebooks/01_eda_ford_used_car_dataset.ipynb
 [02\_train\_car\_price\_prediction\_model.ipynb]: https://github.com/youjin2/streaming-ml-pipeline/blob/main/notebooks/02_train_car_price_prediction_model.ipynb
 [03\_api\_requests\_example.ipynb]: https://github.com/youjin2/streaming-ml-pipeline/blob/main/notebooks/03_api_requests_example.ipynb
