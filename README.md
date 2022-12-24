@@ -135,13 +135,25 @@ So far, we've trained a ML model predicting the used car price and deployed it a
 Now it's time to build the streaming-ml-pipeline.
 
 Before we get into it, let's first define the problem.
-Suppose you are operating a trading platform where user can sell their car after registering some required information.
-They can set the selling price by themselves, but if they don't know the proper price, they may need some recommendation about it.
 
+> Suppose you are operating a trading platform where user can sell their car after registering some required information.
+Users can set the selling price by themselves, but if they don't know the proper price, they may need some recommendation about it.  
+To this end, we're going to build an API service which suggests (or predicts) the appropriate price whenever user create a new record.
 
-[Kafka] is a. There're two connectors in Kafka: source connector and sink connector.
+For this, `Kafka` and `Debezium` are needed.
 
-[Debezium]
+[Kafka] is an open-source distributed event streaming platform used to build a real-time data streaming pipeline.  
+The main components of Kafka are:
+- `Topic`: a category or a feed to which records are published
+- `Event`: each record in the log that consumer and producer exchange data
+- `Broker`: a server that runs Kafka and stores streams of records in topics
+- `Consumer`: read data from brokers
+- `Producer`: write data to brokers
+
+There are many other concepts you need to know about Kafka, but for now just mention above componets and let's learn more about Debezium.
+
+<!--[Debezium] is -->
+<!--I've already mentioned before, there're two connectors in Kafka: source connector and sink connector.-->
 
 Docker-stack environment used to reproduce streaming-ml-pipeline can be built with:  
 Note that since the service `bento_server` dependes on the already built bento, you need to train & build the bento in advance to build this docker-stack images successfully.
