@@ -152,11 +152,19 @@ The main components of Kafka are:
 
 There are many other concepts you need to know about Kafka, but for now just mention above componets and let's learn more about Debezium.
 
-<!--[Debezium] is -->
-<!--I've already mentioned before, there're two connectors in Kafka: source connector and sink connector.-->
+[Debezium] is an open-source distributed platform for change data capture (CDC). 
+It is built on top of Apache Kafka and provides a set of connectors that enable user to capture changes in various data sources, such as databases, and stream the changes to Kafka.
 
-Docker-stack environment used to reproduce streaming-ml-pipeline can be built with:  
-Note that since the service `bento_server` dependes on the already built bento, you need to train & build the bento in advance to build this docker-stack images successfully.
+Note that I have already mentioned before, there're two connectors in Kafka: source connector and sink connector.
+We're going to create these connectors in Debezium, so that whenever user registers a car information, this change will be detected through the source connector.
+And it will also be sent to the `BentoML API server` to predict the car price and finally save this updated information through the sink connector.
+
+Proposed architecture for these process is:
+
+**i) Build streaming-ml pipeline**
+
+Let's first build the dockererized streaming-ml-pipeline.  
+Docker-stack environment used to operate streaming-ml-pipeline can be built with:  
 ```bash
 $ docker-compose -f docker-compose.yml build
 
@@ -171,6 +179,9 @@ streaming-ml-debezium                             0.1.0              00bbf609402
 streaming-ml-jupyter                              0.1.0              5b4e80dc8277   2 weeks ago    2.13GB
 streaming-ml-postgres                             0.1.0              40039281dc29   3 weeks ago    314MB
 ```
+**NOTE:** Since the service `bento_server` dependes on the already built bento, you need to train & build the bento in advance before trying to build this docker-stack images.
+
+**ii) **
 
 postgres
 The `wal_level=logical` is a configuration needed to Postgres work correctly with Debezium.
