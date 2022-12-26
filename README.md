@@ -159,12 +159,13 @@ Note that I have already mentioned before, there're two connectors in Kafka: sou
 We're going to create these connectors in Debezium, so that whenever user registers a car information, this change will be detected through the source connector.
 And it will also be sent to the `BentoML API server` to predict the car price and finally save this updated information through the sink connector.
 
-Proposed architecture for these process is:
+The Proposed architecture for these process is:
+![title](./docs/figures/architecture.png)
+
 
 **i) Build streaming-ml pipeline**
 
-Let's first build the dockererized streaming-ml-pipeline.  
-Docker-stack environment used to operate streaming-ml-pipeline can be built with:  
+All the infrastructure above can be built with containers:
 ```bash
 $ docker-compose -f docker-compose.yml build
 
@@ -178,14 +179,48 @@ price_prediction_service                          0.1.0              1a6fb70af53
 streaming-ml-debezium                             0.1.0              00bbf6094025   2 weeks ago    941MB
 streaming-ml-jupyter                              0.1.0              5b4e80dc8277   2 weeks ago    2.13GB
 streaming-ml-postgres                             0.1.0              40039281dc29   3 weeks ago    314MB
+
+# run docker-stack containers
+$ docker-compose up -d
 ```
 **NOTE:** Since the service `bento_server` dependes on the already built bento, you need to train & build the bento in advance before trying to build this docker-stack images.
 
-**ii) **
 
-postgres
-The `wal_level=logical` is a configuration needed to Postgres work correctly with Debezium.
+**ii) Postgres**
 
+As you can see in `docker-compose.yml`, we will use `Postgres` as our database throughout this project.  
+I've already prepared init sql file creating the `DATABASE.PUBLIC.TBL_CAR_PRICE` table while building postgres container image.  
+You can check out table lists in the database using Python with:
+```python
+import pandas as pd
+import psycopg2
+
+
+conn = psycopg2.connect(
+    host="postgres",
+    port="5432",
+    user="postgres",
+    password="postgres",
+    database="database",
+)
+
+c = conn.cursor()
+c.execute(
+    """
+    SELECT table_name FROM information_schema.tables
+    WHERE table_schema = 'public'
+    """
+)
+print(c.fetchall())
+
+# output:
+[('tbl_car_price',)]
+```
+
+
+**NOTE:** `wal_level=logical` to `Postgres` work correctly with `Debezium`.
+
+**iii) Debezium & Kafka**
 debezium base endpoint
 - http://0.0.0.0:8083/
 - http://0.0.0.0:8083/connector-plugins/
@@ -235,7 +270,7 @@ $ docker inspect -f '{{.Name}} - {{range $net,$v := .NetworkSettings.Networks}}{
 ps -aq)
 ```
 
-
+**iv) Python app**
 ```bash
 $ docker logs python-app
 ```
