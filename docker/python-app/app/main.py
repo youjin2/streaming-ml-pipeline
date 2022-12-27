@@ -30,7 +30,11 @@ FIELDS = {
 }
 
 # bentoml api enpoint to request the prediction
-BENTO_ENDPOINT = "http://streaming-ml-pipeline_bento_server_1:3000/predict"
+# API endpoint will be automatically created like below unless you specify the container_name in docker-compose.yml
+# - streaming-ml-pipeline: project root directory
+# - bento_server: servece name in docker-compose
+# BENTO_ENDPOINT = "http://streaming-ml-pipeline_bento_server_1:3000/predict"
+BENTO_ENDPOINT = "http://bento-server:3000/predict"
 
 
 class KafkaBuilder:

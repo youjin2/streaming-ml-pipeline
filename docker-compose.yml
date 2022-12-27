@@ -2,7 +2,7 @@ version: "3"
 services:
   zookeeper:
     image: quay.io/debezium/zookeeper:latest
-    container_name: zookeper-car-data
+    container_name: zookeeper
 
   kafka:
     image: quay.io/debezium/kafka:latest
@@ -30,6 +30,7 @@ services:
 
   adminer:
     image: adminer
+    container_name: adminer
     ports:
       - 8080:8080
 
@@ -68,5 +69,6 @@ services:
 
   bento_server:
     image: price_prediction_service:0.1.0
+    container_name: bento-server
     ports:
       - 3000:3000
