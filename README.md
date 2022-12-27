@@ -186,7 +186,7 @@ $ docker-compose up -d
 **NOTE:** Since the service `bento_server` dependes on the already built bento, you need to train & build the bento in advance before trying to build this docker-stack images.
 
 
-**ii) Postgres**
+**ii) Setup Postgres**
 
 As you can see in `docker-compose.yml`, we will use `Postgres` as our database throughout this project.  
 I've already prepared init sql file creating the `DATABASE.PUBLIC.TBL_CAR_PRICE` table while building postgres container image.  
@@ -206,10 +206,10 @@ conn = psycopg2.connect(
 
 c = conn.cursor()
 c.execute(
-    """
-    SELECT table_name FROM information_schema.tables
-    WHERE table_schema = 'public'
-    """
+"""
+SELECT table_name FROM information_schema.tables
+WHERE table_schema = 'public'
+"""
 )
 print(c.fetchall())
 
@@ -217,18 +217,35 @@ print(c.fetchall())
 [('tbl_car_price',)]
 ```
 
-
 **NOTE:** `wal_level=logical` to `Postgres` work correctly with `Debezium`.
 
-**iii) Debezium & Kafka**
-debezium base endpoint
-- http://0.0.0.0:8083/
-- http://0.0.0.0:8083/connector-plugins/
-- http://0.0.0.0:8083/connectors/
 
-adminer
-- http://0.0.0.0:8080/
+**iii) Setup Debezium & Kafka**
 
+As mentioned before, we need to create source/sink connector in `Debezium` and this can be done by sending a `POST` request to the endpoint of `Debezium` connectors. 
+See [debezium\_connectors.py] for more details, and once the `Debezium` container is running, check the endpoints below to see if the connector was created succesfully.
+- Debezium API endpoint: http://0.0.0.0:8083/
+- Plugins endpoint: http://0.0.0.0:8083/connector-plugins/
+- Connectors endpoint: http://0.0.0.0:8083/connectors/
+
+You can check the list of source/sink connectors on the Connectors endpoint:
+```bash
+[
+    "sink_pg_car_connector",
+    "source_pg_car_connector"
+]
+```
+
+**NOTE:** We didn't created a database table for sink topic, since `Debezium` automatically create this table by inferring schema when the first message is sent to the sink topic.
+
+**iv) Connecting Kafka and Debezium**
+
+Now, we have built the main parts of our streaming-ml pipeline and the reamaining is connecting them together.
+
+**v) Stream the data**
+
+<!--let's try sending a new record to-->
+Open `Adminer` web (http://0.0.0.0:8080/)
 
 run below in kafka or debezium container
 ```bash
@@ -266,8 +283,7 @@ how to know (or fix) internal network ip address?
 ```
 
 ```bash
-$ docker inspect -f '{{.Name}} - {{range $net,$v := .NetworkSettings.Networks}}{{printf "%s" $net}}{{end}} - {{range .NetworkSettings.Networks}}{{.IPAddress}} - {{.NetworkID}}{{end}}' $(docker
-ps -aq)
+$ docker inspect -f '{{.Name}} - {{range $net,$v := .NetworkSettings.Networks}}{{printf "%s" $net}}{{end}} - {{range .NetworkSettings.Networks}}{{.IPAddress}} - {{.NetworkID}}{{end}}' $(docker ps -aq)
 ```
 
 **iv) Python app**
@@ -302,3 +318,4 @@ $ docker logs python-app
 [01\_eda\_ford\_used\_car\_dataset.ipynb]: https://github.com/youjin2/streaming-ml-pipeline/blob/main/notebooks/01_eda_ford_used_car_dataset.ipynb
 [02\_train\_car\_price\_prediction\_model.ipynb]: https://github.com/youjin2/streaming-ml-pipeline/blob/main/notebooks/02_train_car_price_prediction_model.ipynb
 [03\_api\_requests\_example.ipynb]: https://github.com/youjin2/streaming-ml-pipeline/blob/main/notebooks/03_api_requests_example.ipynb
+[debezium\_connectors.py]: https://github.com/youjin2/streaming-ml-pipeline/blob/main/docker/python-app/connector/debezium_connectors.py
