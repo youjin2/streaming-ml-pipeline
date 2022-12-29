@@ -38,6 +38,9 @@ BENTO_ENDPOINT = "http://bento-server:3000/predict"
 
 
 class KafkaBuilder:
+    """KafkaBuilder.
+    builds Kafka consumer and producer
+    """
 
     def __init__(self):
         # build consumer and producer instances
@@ -72,6 +75,9 @@ class KafkaBuilder:
 
 
 class RequestHandler:
+    """RequestHandler.
+    POST streaming data to Bento Server and get a prediction response
+    """
 
     def __init__(self):
         pass
@@ -122,7 +128,7 @@ if __name__ == "__main__":
         pred_price = api_handler.predict(input_dict=input_dict)
         message_dict["payload"]["suggested_price"] = pred_price
 
-        # send the message to the topic with the suggested price
+        # send the message to the sink topic with the suggested price
         builder.producer.produce(
             SINK_TOPIC,
             key=key,
