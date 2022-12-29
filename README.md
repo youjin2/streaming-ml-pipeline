@@ -223,7 +223,7 @@ print(c.fetchall())
 **iii) Setup Debezium & Kafka**
 
 As mentioned before, we need to create source/sink connector in `Debezium` and this can be done by sending a `POST` request to the endpoint of `Debezium` connectors. 
-See [debezium\_connectors.py] for more details, and once the `Debezium` container is running, check the endpoints below to see if the connector was created succesfully.
+See [python-app/connector/debezium\_connectors.py] for more details, and once the `Debezium` container is running, check the endpoints below to see if the connector was created succesfully.
 - Debezium API endpoint: http://0.0.0.0:8083/
 - Plugins endpoint: http://0.0.0.0:8083/connector-plugins/
 - Connectors endpoint: http://0.0.0.0:8083/connectors/
@@ -238,11 +238,55 @@ You can check the list of source/sink connectors on the Connectors endpoint:
 
 **NOTE:** We didn't created a database table for sink topic, since `Debezium` automatically create this table by inferring schema when the first message is sent to the sink topic.
 
-**iv) Connecting Kafka and Debezium**
+**iv) Connecting Kafka and ML model**
 
-Now, we have built the main parts of our streaming-ml pipeline and the reamaining is connecting them together.
+Now, we have built the main parts of our streaming-ml pipeline:  
+- Process streaming data with `Kafka/Debezium`  
+- Serve ML model with `BentoML`
 
-**v) Stream the data**
+All that reamains is to connect each component to send a streaming data to the ML server to get the predicted car price and store them in a database, which can be done using a `Python script`.
+```python
+# create Kafka consumer/producer instance
+builder = KafkaBuilder()
+
+# ML API server
+api_handler = RequestHandler()
+
+while True:
+    msg = builder.consumer.poll(1.0)
+    if msg is None:
+        continue
+    if msg.value() is None:
+        continue
+    if msg.error():
+        logging.error("Consumer error: {}".format(msg.error()))
+        continue
+
+    # retrieve the message and the key
+    message = msg.value().decode("utf-8")
+    key = msg.key().decode("utf-8")
+
+    # get predicted car price
+    message_dict = json.loads(message)
+    input_dict = api_handler.parse_inputs(message_dict=message_dict)
+
+    # update the suggested price field
+    pred_price = api_handler.predict(input_dict=input_dict)
+    message_dict["payload"]["suggested_price"] = pred_price
+
+    # send the message to the sink topic with the suggested price
+    builder.producer.produce(
+        SINK_TOPIC,
+        key=key,
+        value=json.dumps(message_dict)
+    )
+    builder.producer.flush(1)
+```
+[python-app/app/main.py]
+
+
+
+**v) Streaming-ML pipeline Example**
 
 <!--let's try sending a new record to-->
 Open `Adminer` web (http://0.0.0.0:8080/)
@@ -318,4 +362,5 @@ $ docker logs python-app
 [01\_eda\_ford\_used\_car\_dataset.ipynb]: https://github.com/youjin2/streaming-ml-pipeline/blob/main/notebooks/01_eda_ford_used_car_dataset.ipynb
 [02\_train\_car\_price\_prediction\_model.ipynb]: https://github.com/youjin2/streaming-ml-pipeline/blob/main/notebooks/02_train_car_price_prediction_model.ipynb
 [03\_api\_requests\_example.ipynb]: https://github.com/youjin2/streaming-ml-pipeline/blob/main/notebooks/03_api_requests_example.ipynb
-[debezium\_connectors.py]: https://github.com/youjin2/streaming-ml-pipeline/blob/main/docker/python-app/connector/debezium_connectors.py
+[python-app/connector/debezium\_connectors.py]: https://github.com/youjin2/streaming-ml-pipeline/blob/main/docker/python-app/connector/debezium_connectors.py
+[python-app/app/main.py]: https://github.com/youjin2/streaming-ml-pipeline/blob/main/docker/python-app/app/main.py
