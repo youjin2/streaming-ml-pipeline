@@ -244,7 +244,10 @@ Now, we have built the main parts of our streaming-ml pipeline:
 - Process streaming data with `Kafka/Debezium`  
 - Serve ML model with `BentoML`
 
-All that reamains is to connect each component to send a streaming data to the ML server to get the predicted car price and store them in a database, which can be done using a `Python script`.
+All that reamains is to connect each component to send a streaming data to the ML server to get the predicted car price and store them in a database, which can be done using a `Python script`. 
+Specifically, we can put all these components together by using a `Kafka consumer/producer` instances which can be simply created using [confluent-kafka] libray.  
+
+The codes below is a brief summary of the `Python script` and detailed definition about `KafkaBuilder & RequestHandler` can be found at [python-app/app/main.py].
 ```python
 # create Kafka consumer/producer instance
 builder = KafkaBuilder()
@@ -282,7 +285,6 @@ while True:
     )
     builder.producer.flush(1)
 ```
-[python-app/app/main.py]
 
 
 
@@ -290,6 +292,7 @@ while True:
 
 <!--let's try sending a new record to-->
 Open `Adminer` web (http://0.0.0.0:8080/)
+![title](docs/figures/adminer_login.png)
 
 run below in kafka or debezium container
 ```bash
@@ -364,3 +367,4 @@ $ docker logs python-app
 [03\_api\_requests\_example.ipynb]: https://github.com/youjin2/streaming-ml-pipeline/blob/main/notebooks/03_api_requests_example.ipynb
 [python-app/connector/debezium\_connectors.py]: https://github.com/youjin2/streaming-ml-pipeline/blob/main/docker/python-app/connector/debezium_connectors.py
 [python-app/app/main.py]: https://github.com/youjin2/streaming-ml-pipeline/blob/main/docker/python-app/app/main.py
+[confluent-kafka]: https://github.com/confluentinc/confluent-kafka-python
