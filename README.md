@@ -160,6 +160,7 @@ We're going to create these connectors in Debezium, so that whenever user regist
 And it will also be sent to the `BentoML API server` to predict the car price and finally save this updated information through the sink connector.
 
 The Proposed architecture for these process is:
+
 ![title](./docs/figures/architecture.png)
 
 
@@ -290,11 +291,17 @@ while True:
 
 **v) Streaming-ML pipeline Example**
 
-<!--let's try sending a new record to-->
-Open `Adminer` web (http://0.0.0.0:8080/)
+Up to now, we have seen how to build a streaming-ml pipeline using `Kafka/Debezium` and `BentoML`. 
+To do this, we created a `Python App` which detects the changes of the `car database`, and sends them to a `Kafka topic`, and then predicts the `car price` by sending a `POST` request to the `ML API server`
+
+Now, let's figure out how the entire pipeline works as expeceted with a simple example.
+
+First, we are going to use `Adminer`, which is a database management tool written in `PHP`, to manage the stream data.
+We have already run it as a docker container while running docker-compose, so just open `Adminer` web (http://0.0.0.0:8080/) and login to it as below.
+
 ![title](docs/figures/adminer_login.png)
 
-run below in kafka or debezium container
+And then, open a new terminal and run commands below in `Kafka` container to check the standard output of streaming data sent to the `Kafka topic`.
 ```bash
 # kafka conatiner
 $ docker exec -it kafka /bin/bash
@@ -302,17 +309,21 @@ $ docker exec -it kafka /bin/bash
 # monitor consumer logs
 $ kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic car_database.public.tbl_car_price
 ```
-wait until python-app creating debeizum connections
+
+After running commands above, you can see the logs like below. (Don't worry about the error messages appeared, since it can happen when you run the commands before `Debezium` server finished running.)
+
 ![title](docs/figures/kafka_consumer_example1.png)
 
 
-Update `tbl_car_price` table via `SQL command` (left) or directly insert by clicking `New item button` (right)
+<!--Now, let's make -->
+<!--Update `tbl_car_price` table via `SQL command` (left) or directly insert by clicking `New item button` (right)-->
 
 <img src="docs/figures/adminer_insert_example1.png" width="420"/> <img src="docs/figures/adminer_insert_example2.png" width="420" height=230/> 
 <!--![alt-text-1](docs/figures/adminer_insert_example1.png "title-1") ![alt-text-2](docs/figures/kafka_consumer_example2.png "title-2")-->
 
 
-You can 
+The data we created just before can be found at `Adminer -> tbl_car_price -> select`.
+
 ![title](docs/figures/adminer_insert_example3.png)
 
 message created on Kafaka which is written in `AVRO`
@@ -333,10 +344,10 @@ how to know (or fix) internal network ip address?
 $ docker inspect -f '{{.Name}} - {{range $net,$v := .NetworkSettings.Networks}}{{printf "%s" $net}}{{end}} - {{range .NetworkSettings.Networks}}{{.IPAddress}} - {{.NetworkID}}{{end}}' $(docker ps -aq)
 ```
 
-**iv) Python app**
 ```bash
 $ docker logs python-app
 ```
+![title](./docs/figures/python_app_logs.png)
 
 ![title](./docs/figures/kafka_source_topic.png)
 ![title](docs/figures/kafka_sink_topic.png)
