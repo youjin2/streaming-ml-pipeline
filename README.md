@@ -301,7 +301,7 @@ We have already run it as a docker container while running docker-compose, so ju
 
 ![title](docs/figures/adminer_login.png)
 
-And then, open a new terminal and run commands below in `Kafka` container to check the standard output of streaming data sent to the `Kafka topic`.
+And then, open a new terminal and run commands below in `Kafka` container to check the standard output of streaming data sent to the `Kafka source topic`.
 ```bash
 # kafka conatiner
 $ docker exec -it kafka /bin/bash
@@ -315,18 +315,47 @@ After running commands above, you can see the logs like below. (Don't worry abou
 ![title](docs/figures/kafka_consumer_example1.png)
 
 
-<!--Now, let's make -->
-<!--Update `tbl_car_price` table via `SQL command` (left) or directly insert by clicking `New item button` (right)-->
+Now, let's make make some example records and see how it sent to the `Kafka source topic`.  
+You can create an example record using `SQL command` (left) or by clicking `New item bottn` (right).
 
 <img src="docs/figures/adminer_insert_example1.png" width="420"/> <img src="docs/figures/adminer_insert_example2.png" width="420" height=230/> 
 <!--![alt-text-1](docs/figures/adminer_insert_example1.png "title-1") ![alt-text-2](docs/figures/kafka_consumer_example2.png "title-2")-->
 
+**NOTE:** Below is an example `SQL query` for writing record to `tbl_car_price` table.
+```sql
+INSERT INTO
+    tbl_car_price
+(
+    MODEL,
+    YEAR,
+    TRANSMISSION,
+    MILEAGE,
+    FUEL_TYPE,
+    TAX,
+    MPG,
+    ENGINE_SIZE
+)
+VALUES
+(
+    'Fiesta',
+    2017,
+    'Automatic',
+    13000,
+    'Petrol',
+    140,
+    43.2,
+    1.2
+);
+```
 
-The data we created just before can be found at `Adminer -> tbl_car_price -> select`.
+
+The data we have created just before can be found at `Adminer -> tbl_car_price -> select`.
 
 ![title](docs/figures/adminer_insert_example3.png)
 
-message created on Kafaka which is written in `AVRO`
+Also, the messages created on `Kafka` can be checked in the termina log which we previously executed in `Kafka container`.
+The message is written in `AVRO`, the leading serialization format for record data, and can be understood as `JSON with a schema`.
+
 ![title](docs/figures/kafka_consumer_example3.png)
 
 
@@ -336,8 +365,7 @@ how to know (or fix) internal network ip address?
 >>> import requests
 
 >>> inputs = {'engineSize': [1.2], 'fuelType': ['Diesel'], 'mileage': [5060], 'model': ['C-MAX'], 'mpg': [45.2], 'tax': [165], 'transmission': ['Manual'], 'year': [2017]}
->>> requests.post("http://172.26.0.3:3000/predict", json=inputs)
->>> requests.post("http://streaming-ml-pipeline_bento_server_1:3000/predict", json=inputs)
+>>> response = requests.post("http://bento-server:3000/predict", json=inputs)
 ```
 
 ```bash
