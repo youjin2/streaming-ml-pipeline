@@ -43,7 +43,7 @@ A detailed code examples for EDA about `Ford used car dataset` and training proc
 - [01\_eda\_ford\_used\_car\_dataset.ipynb]
 - [02\_train\_car\_price\_prediction\_model.ipynb]
 
-In case you want to skip the above examples, I have written a python script that trains the ML model and save it as a `BentoML` model.  
+In case you want to skip the above examples, I have written a Python script that trains the ML model and save it as a `BentoML` model.  
 In that case, just run commands below in the docker container:
 ```bash
 # train and save the BentoML model
@@ -71,7 +71,7 @@ $ curl -X \
     --data '{"model": ["C-MAX", "EcoSport"], "year": [2014, 2019], "price": [8295, 18995], "transmission": ["Semi-Auto", "Automatic"], "mileage": [40000, 1400], "fuelType": ["Diesel", "Petrol"], "tax": [160, 150], "mpg": [50.4, 44.1], "engineSize": [2.0, 1.0]}' \
     http://0.0.0.0:12000/predict
 ```
-Moreover, a python example for API request also can be found at [03\_api\_requests\_example.ipynb].
+Moreover, a Python example for API request also can be found at [03\_api\_requests\_example.ipynb].
 
 **NOTE:** If you got an error message like below in your API server logs, check whether the `n_jobs` argument of `sklearn` `ColumnTransformer` is set to 1 correctly.
 (`BentoML` save/restore the sklearn model instance with `joblib.dump/joblib.load` which preserves the `n_jobs` argrument and this raises a seg-fault error.)
@@ -354,13 +354,26 @@ The data we have created just before can be found at `Adminer -> tbl_car_price -
 ![title](docs/figures/adminer_insert_example3.png)
 
 Also, the messages created on `Kafka` can be checked in the termina log which we previously executed in `Kafka container`.
-The message is written in `AVRO`, the leading serialization format for record data, and can be understood as `JSON with a schema`.
+The message is written in [AVRO], the leading serialization format for record data, which can be understood as `JSON with a schema`.
 
 ![title](docs/figures/kafka_consumer_example3.png)
 
 
-bentoml requests between docker-compose network
-how to know (or fix) internal network ip address?
+If the messages are created succesfully on `Kafka`, then the `Python App` predicts the car price by parsing and sending them to the `BentoML server`.  
+
+We can the check the output logs with command below:
+```bash
+$ docker logs python-app
+```
+![title](./docs/figures/python_app_logs.png)
+
+Finally, if there's no problem in the app log, check whether the message including `suggested_price` field is written in `car_data_predicted` table on `Adiminer`.
+
+See `Adminer -> tbl_car_price -> select` for source table (left), and `Adminer -> car_data_predicted -> select` for sink table (right).
+
+<img src="docs/figures/kafka_source_topic.png" width="440"/> <img src="docs/figures/kafka_sink_topic.png" width="440" height=312/> 
+
+**NOTE:** You can make an API request to `Bento Server` which is used in `Python App` with:
 ```python
 >>> import requests
 
@@ -368,18 +381,11 @@ how to know (or fix) internal network ip address?
 >>> response = requests.post("http://bento-server:3000/predict", json=inputs)
 ```
 
+The domain name for `Bento Server` follows the container name defined in `docker-compose` and you can also use IP address by identifying the network address used in docker-compose.
+(but, ip address may varies when you re-running the docker-compose)
 ```bash
 $ docker inspect -f '{{.Name}} - {{range $net,$v := .NetworkSettings.Networks}}{{printf "%s" $net}}{{end}} - {{range .NetworkSettings.Networks}}{{.IPAddress}} - {{.NetworkID}}{{end}}' $(docker ps -aq)
 ```
-
-```bash
-$ docker logs python-app
-```
-![title](./docs/figures/python_app_logs.png)
-
-![title](./docs/figures/kafka_source_topic.png)
-![title](docs/figures/kafka_sink_topic.png)
-
 
 
 ## References
@@ -407,3 +413,4 @@ $ docker logs python-app
 [python-app/connector/debezium\_connectors.py]: https://github.com/youjin2/streaming-ml-pipeline/blob/main/docker/python-app/connector/debezium_connectors.py
 [python-app/app/main.py]: https://github.com/youjin2/streaming-ml-pipeline/blob/main/docker/python-app/app/main.py
 [confluent-kafka]: https://github.com/confluentinc/confluent-kafka-python
+[AVRO]: https://avro.apache.org/
